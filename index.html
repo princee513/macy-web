@@ -1,2 +1,89 @@
-<h1>Macy's Tech Zone</h1>
-<p>Test 1 2 3...</p>
+//<h1>Macy's Tech Zone</h1>
+//<p>Test 1 2 3...</p>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 DGX Spark (Blackwell GB10) AI Agent 管理介面</title>
+    <style>
+        /* CSS 樣式 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .card {
+            margin: 20px;
+            padding: 20px;
+            width: calc(33.33% - 40px);
+            background-color: #f7f7f7;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .card:hover {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>我的 DGX Spark (Blackwell GB10) AI Agent 管理介面</h1>
+        </div>
+        <div class="main-content">
+            <!-- 卡片 1 -->
+            <div class="card">
+                <h2>AI Agent 狀態</h2>
+                <p>目前狀態：<span id="agent-status">運行中</span></p>
+                <button onclick="toggleAgent()">切換代理服務器</button>
+            </div>
+            <!-- 卡片 2 -->
+            <div class="card">
+                <h2>模型訓練進度</h2>
+                <p>目前進度：<span id="training-progress">50%</span></p>
+                <button onclick="updateTrainingProgress()">更新進度</button>
+            </div>
+            <!-- 卡片 3 -->
+            <div class="card">
+                <h2>系統資源監控</h2>
+                <p>CPU 使用率：<span id="cpu-usage">30%</span></p>
+                <p>記憶體使用量：<span id="memory-usage">4GB / 16GB</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript 代碼
+        function toggleAgent() {
+            // 切換代理服務器邏輯
+            document.getElementById("agent-status").innerText = (document.getElementById("agent-status").innerText === "運行中") ? "已停止" : "運行中";
+        }
+
+        function updateTrainingProgress() {
+            // 更新模型訓練進度邏輯
+            const progress = Math.min(100, parseInt(document.getElementById("training-progress").innerText) + 10);
+            document.getElementById("training-progress").innerText = progress + "%";
+        }
+    </script>
+</body>
+</html>
