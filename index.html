@@ -51,6 +51,12 @@
   .tab.active .t-day,.tab.active .t-name,.tab.active .cnt{color:#fff}
   .tab.active .cnt{background:rgba(255,255,255,.25)}
 
+  /* ---------------- 資料來源提示列 ---------------- */
+  #srcBar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:#fff8e6;
+          border-bottom:1px solid #eadfc0;font-size:12.5px;color:#7a6a3a;flex-wrap:wrap}
+  #srcBar[hidden]{display:none}
+  #srcBar .btn{flex-shrink:0}
+
   /* ---------------- 主體布局 ---------------- */
   #main{flex:1;display:flex;overflow:hidden;min-height:0}
   #sidebar{width:var(--sidebar-w,470px);min-width:320px;max-width:70vw;overflow-y:auto;
@@ -229,6 +235,13 @@
 
 <nav id="dayBar"></nav>
 
+<div id="srcBar" hidden>
+  <span id="srcMsg"></span>
+  <span style="flex:1"></span>
+  <button class="btn mini" id="btnUsePub">📄 載入發布版</button>
+  <button class="btn mini" id="btnSrcDismiss">✕</button>
+</div>
+
 <main id="main">
   <aside id="sidebar">
     <div class="day-head">
@@ -256,7 +269,7 @@
     <div id="candList"></div>
     <div class="side-foot">
       ⚠️ 範例景點的座標與營業時間僅供參考，請以地圖搜尋與官方公告為準。<br>
-      行程自動存在此瀏覽器；換裝置請用「匯出／匯入 JSON」搬移。
+      行程來源：<b>fukuoka-itinerary.json</b>（與網頁一起發布）。改好後按「匯出」覆蓋 repo 中的檔案再 push 即可更新網頁。
     </div>
   </aside>
 
@@ -328,6 +341,7 @@
 <script>
 'use strict';
 /* ================= 基本資料 ================= */
+const $=id=>document.getElementById(id);
 const LS_KEY='fukuoka-trip-planner-v1';
 const CATS={
   food:      {label:'🍜 美食', color:'#e07856'},
@@ -431,26 +445,72 @@ function normalize(s){
 }
 
 function init(){
-  let s=null;
-  try{
-    const raw=localStorage.getItem(LS_KEY);
-    if(raw){
-      const ls=JSON.parse(raw);
-      if(ls && Array.isArray(ls.days) && ls.days.length){
-        if(!ls.version || ls.version<3){
-          if(ls.days.length>=5){ const t=ls.days[1]; ls.days[1]=ls.days[4]; ls.days[4]=t; }
-          ls.version=3;
-        }
-        s=ls;
+  // 資料來源優先序：
+  //  1. fukuoka-itinerary.json（跟網頁放在一起的發布版，靜態 hosting 上所有人都能看到）
+  //  2. localStorage（本機瀏覽時的個人暫存修改）
+  //  3. 內建範例
+  fetch('fukuoka-itinerary.json',{cache:'no-store'})
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(pub=>{
+      if(!pub || !Array.isArray(pub.days) || !pub.days.length) throw new Error('bad');
+      const raw=localStorage.getItem(LS_KEY);
+      if(raw){
+        try{
+          const ls=JSON.parse(raw);
+          if(ls && Array.isArray(ls.days) && ls.days.length && JSON.stringify(ls)!==JSON.stringify(pub)){
+            showSrcBar('顯示的是你上次編輯的內容（存在此瀏覽器）；發布版（fukuoka-itinerary.json）內容不同。');
+          }
+        }catch(e){}
       }
-    }
-  }catch(e){}
-  if(!s) s=seedData();
+      applyState(pub);
+    })
+    .catch(()=>{
+      let s=null;
+      try{
+        const raw=localStorage.getItem(LS_KEY);
+        if(raw){
+          const ls=JSON.parse(raw);
+          if(ls && Array.isArray(ls.days) && ls.days.length){
+            if(!ls.version || ls.version<3){
+              if(ls.days.length>=5){ const t=ls.days[1]; ls.days[1]=ls.days[4]; ls.days[4]=t; }
+              ls.version=3;
+            }
+            s=ls;
+          }
+        }
+      }catch(e){}
+      if(!s) s=seedData();
+      applyState(s);
+    });
+}
+function applyState(s){
+  if(!s.version || s.version<3){
+    if(s.days.length>=5){ const t=s.days[1]; s.days[1]=s.days[4]; s.days[4]=t; }
+    s.version=3;
+  }
   normalize(s);
   state=s;
   renderAll();
   save();
 }
+
+function showSrcBar(msg){
+  $('srcMsg').textContent=msg;
+  $('srcBar').hidden=false;
+}
+$('btnSrcDismiss').onclick=()=>{ $('srcBar').hidden=true; };
+$('btnUsePub').onclick=()=>{
+  fetch('fukuoka-itinerary.json',{cache:'no-store'})
+    .then(r=>r.json())
+    .then(pub=>{
+      if(!confirm('放棄此瀏覽器上的修改，載入發布版行程？')) return;
+      localStorage.removeItem(LS_KEY);
+      applyState(pub);
+      $('srcBar').hidden=true;
+      toast('已載入發布版行程');
+    })
+    .catch(()=>toast('讀取發布版失敗'));
+};
 
 function save(){
   if(!state) return;
@@ -460,7 +520,6 @@ function save(){
 function day(){ return state.days[currentDay]; }
 
 /* ================= 小工具 ================= */
-const $=id=>document.getElementById(id);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function havKm(a,b){
   const R=6371000,r=Math.PI/180;
@@ -920,13 +979,13 @@ function openLegModal(stopIdx){
 
 /* ================= 匯出／匯入 ================= */
 $('btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='fukuoka-itinerary.json';
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  toast('已下載 fukuoka-itinerary.json');
+  toast('已下載 fukuoka-itinerary.json —— 用它覆蓋 repo 裡的同名檔案再 push，網頁就會更新');
 };
 $('btnImport').onclick=()=>$('fileInput').click();
 $('fileInput').addEventListener('change',e=>{
