@@ -1,0 +1,436 @@
+{
+  "version": 3,
+  "days": [
+    {
+      "name": "抵達・博多",
+      "date": "2026-11-21",
+      "mode": "walk",
+      "notes": "行李先放飯店。",
+      "stops": [
+        {
+          "id": "sumfle5o",
+          "name": "福岡機場",
+          "cat": "transport",
+          "startTime": "18:00",
+          "endTime": "18:30",
+          "hours": "全日",
+          "lat": 33.5837,
+          "lng": 130.4508,
+          "addr": "福岡市博多區下臼井",
+          "notes": "地鐵機場線直達博多站約 5 分鐘"
+        },
+        {
+          "id": "sxlxlha7",
+          "name": "JR博多站・屋上花園",
+          "cat": "transport",
+          "startTime": "18:31",
+          "endTime": "18:40",
+          "hours": "10:00–22:00（設施而異）",
+          "lat": 33.59,
+          "lng": 130.4207,
+          "addr": "福岡市博多區博多站中央街1-1",
+          "notes": "步行10分鐘左右到飯店。\n頂樓「燕林廣場」可看飛機起降與夜景。",
+          "transit": {
+            "mode": "subway",
+            "info": "",
+            "min": "5"
+          }
+        },
+        {
+          "id": "smvaiyj9ggxg",
+          "name": "KOKO Hotel 博多駅",
+          "cat": "hotel",
+          "startTime": "18:41",
+          "endTime": "19:00",
+          "hours": "入住時間：下午3:00",
+          "addr": "KOKO Hotel 博多駅, 博多駅前６８号線, 博多駅前三丁目",
+          "lat": 33.588523,
+          "lng": 130.4161757,
+          "notes": "",
+          "transit": {
+            "mode": "walk",
+            "info": "",
+            "min": "10"
+          }
+        },
+        {
+          "id": "sew6v4n6",
+          "name": "博多運河城",
+          "cat": "shop",
+          "startTime": "19:10",
+          "endTime": "19:20",
+          "hours": "10:00–21:00（店鋪而異）",
+          "lat": 33.5902,
+          "lng": 130.4113,
+          "addr": "福岡市博多區住吉1-2",
+          "notes": "噴水秀每整點(建議在B1看)\n地下街美食街"
+        }
+      ],
+      "cands": [
+        {
+          "id": "cmvakexapr3g",
+          "name": "一蘭拉麵",
+          "cat": "food",
+          "hours": "24 小時營業",
+          "addr": "一蘭拉麵, 2, 中洲五丁目",
+          "lat": 33.5932093,
+          "lng": 130.4045624,
+          "notes": "一蘭拉麵總店。"
+        },
+        {
+          "id": "cmvakw2h63kb",
+          "name": "楽天地",
+          "cat": "food",
+          "hours": "17:00–01:00",
+          "addr": "楽天地, 博多駅前４５号線, 博多駅前二丁目",
+          "lat": 33.5900392,
+          "lng": 130.4166244,
+          "notes": "牛腸鍋，有名但怕膩，有大量韭菜。"
+        },
+        {
+          "id": "cmvam0iff9rk",
+          "name": "Kitte Hakata",
+          "cat": "shop",
+          "hours": "07:00–00:00 (店鋪而異)",
+          "addr": "Kitte Hakata, 博多区, 福冈市",
+          "lat": 33.5888887,
+          "lng": 130.4194425,
+          "notes": "4F：Seria 日本百元商店(日幣的百元)\nB1：Shin shin 博多拉麵"
+        }
+      ]
+    },
+    {
+      "name": "門司港・下關",
+      "date": "2026-11-25",
+      "mode": "drive",
+      "notes": "JR 由博多往小倉轉門司港；關門聯絡船 5 分鐘到唐戶市場。",
+      "stops": [
+        {
+          "id": "sf8hhzhg",
+          "name": "博多站出發",
+          "cat": "transport",
+          "startTime": "08:35",
+          "endTime": "10:05",
+          "hours": "",
+          "lat": 33.59,
+          "lng": 130.4207,
+          "addr": "福岡市博多區",
+          "notes": "JR鹿兒島本線快速約 1.5 小時"
+        },
+        {
+          "id": "syfno6tn",
+          "name": "門司港懷舊地區",
+          "cat": "sight",
+          "startTime": "10:15",
+          "endTime": "12:00",
+          "hours": "全日（設施 09:00–18:00 前後）",
+          "lat": 33.9073,
+          "lng": 130.9395,
+          "addr": "北九州市門司區",
+          "notes": "舊門司稅關、藍翼吊橋（開橋 10:00 起）"
+        },
+        {
+          "id": "s8p5bimx",
+          "name": "唐戶市場（午餐）",
+          "cat": "food",
+          "startTime": "12:30",
+          "endTime": "14:15",
+          "hours": "約 08:00–15:00，週三與特定日休",
+          "lat": 33.9569,
+          "lng": 130.9398,
+          "addr": "下關市唐戶町5-50",
+          "notes": "河豚生魚片蓋飯；從門司港搭聯絡船 5 分"
+        },
+        {
+          "id": "s1tmbdix",
+          "name": "小倉城",
+          "cat": "sight",
+          "startTime": "15:30",
+          "endTime": "17:00",
+          "hours": "09:00–18:00（4–10月）",
+          "lat": 33.8862,
+          "lng": 130.8788,
+          "addr": "北九州市小倉北區城內2-1",
+          "notes": "回程順路，旁邊有 Aru Aru City 動漫街"
+        },
+        {
+          "id": "srtsulas",
+          "name": "博多站",
+          "cat": "transport",
+          "startTime": "18:45",
+          "endTime": "",
+          "hours": "",
+          "lat": 33.59,
+          "lng": 130.4207,
+          "addr": "福岡市博多區",
+          "notes": "新幹線小倉→博多約 15 分"
+        }
+      ],
+      "cands": []
+    },
+    {
+      "name": "太宰府一日遊",
+      "date": "2026-11-23",
+      "mode": "drive",
+      "notes": "西鐵電車：天神→太宰府約 30 分（二日市轉車或觀光直通車）。",
+      "stops": [
+        {
+          "id": "sg5wx57j",
+          "name": "太宰府天滿宮",
+          "cat": "sight",
+          "startTime": "09:45",
+          "endTime": "11:30",
+          "hours": "06:30–19:00（季節變動）",
+          "lat": 33.5241,
+          "lng": 130.5326,
+          "addr": "太宰府市宰府4-7-1",
+          "notes": "學問之神；牛御神像、飛梅傳說"
+        },
+        {
+          "id": "smkfuzwl",
+          "name": "表參道商店街（含梅ヶ枝餅）",
+          "cat": "food",
+          "startTime": "11:30",
+          "endTime": "13:15",
+          "hours": "各店不一",
+          "lat": 33.5236,
+          "lng": 130.5317,
+          "addr": "太宰府市宰府",
+          "notes": "邊走邊吃梅ヶ枝餅；星巴克木條建築"
+        },
+        {
+          "id": "sgit10hm",
+          "name": "九州國立博物館",
+          "cat": "sight",
+          "startTime": "13:30",
+          "endTime": "15:30",
+          "hours": "09:30–17:00，週一休",
+          "lat": 33.5258,
+          "lng": 130.5294,
+          "addr": "太宰府市石坂4-7-2",
+          "notes": "連著天滿宮後山，玻璃建築"
+        },
+        {
+          "id": "sy4xbsf2",
+          "name": "牛雜鍋晚餐（天神）",
+          "cat": "food",
+          "startTime": "17:30",
+          "endTime": "19:30",
+          "hours": "多為 17:00–23:00",
+          "lat": 33.5902,
+          "lng": 130.3996,
+          "addr": "福岡市中央區天神",
+          "notes": "博多名物もつ鍋，建議先訂位"
+        }
+      ],
+      "cands": []
+    },
+    {
+      "name": "由布院（湯布院）一日遊",
+      "date": "2026-11-24",
+      "mode": "drive",
+      "notes": "特急「由布」博多直達約 1 小時 50 分；假日請提早劃位。",
+      "stops": [
+        {
+          "id": "sb87th8p",
+          "name": "博多站出發（特急由布）",
+          "cat": "transport",
+          "startTime": "08:25",
+          "endTime": "10:10",
+          "hours": "",
+          "lat": 33.59,
+          "lng": 130.4207,
+          "addr": "福岡市博多區",
+          "notes": "全車指定席，記得先劃位"
+        },
+        {
+          "id": "stfalsxy",
+          "name": "由布院車站",
+          "cat": "transport",
+          "startTime": "10:10",
+          "endTime": "10:45",
+          "hours": "",
+          "lat": 33.2704,
+          "lng": 131.3584,
+          "addr": "由布市湯布院町川上",
+          "notes": "站前可寄放行李或租自行車"
+        },
+        {
+          "id": "sve3pzw6",
+          "name": "湯之坪街道（含午餐）",
+          "cat": "shop",
+          "startTime": "10:45",
+          "endTime": "13:15",
+          "hours": "各店不一",
+          "lat": 33.2723,
+          "lng": 131.3571,
+          "addr": "由布市湯布院町",
+          "notes": "B-speak 金賞布丁、雜貨小店慢慢逛"
+        },
+        {
+          "id": "s1fjd4ox",
+          "name": "金鱗湖",
+          "cat": "sight",
+          "startTime": "13:30",
+          "endTime": "15:00",
+          "hours": "全日（湖畔店鋪 09:00–17:00 前後）",
+          "lat": 33.2767,
+          "lng": 131.3565,
+          "addr": "由布市湯布院町川上",
+          "notes": "清晨湖面霧氣最有名"
+        },
+        {
+          "id": "s4gig377",
+          "name": "由布院車站（返程）",
+          "cat": "transport",
+          "startTime": "16:20",
+          "endTime": "18:15",
+          "hours": "",
+          "lat": 33.2704,
+          "lng": 131.3584,
+          "addr": "由布市湯布院町川上",
+          "notes": "特急由布返回博多"
+        },
+        {
+          "id": "sd1azm93",
+          "name": "博多站晚餐",
+          "cat": "food",
+          "startTime": "18:30",
+          "endTime": "20:15",
+          "hours": "各店不一",
+          "lat": 33.59,
+          "lng": 130.4207,
+          "addr": "福岡市博多區博多站中央街",
+          "notes": "站內選擇非常多"
+        }
+      ],
+      "cands": []
+    },
+    {
+      "name": "博多市區經典",
+      "date": "2026-11-22",
+      "mode": "walk",
+      "notes": "",
+      "stops": [
+        {
+          "id": "sv2d1fnf",
+          "name": "櫛田神社",
+          "cat": "sight",
+          "startTime": "09:00",
+          "endTime": "10:30",
+          "hours": "06:00–18:00（授付至17:00）",
+          "lat": 33.5935,
+          "lng": 130.4146,
+          "addr": "福岡市博多區上川端町1-41",
+          "notes": "看山笠花車；博多町家故鄉館就在旁邊"
+        },
+        {
+          "id": "sedm7s7i",
+          "name": "博多町家故鄉館",
+          "cat": "sight",
+          "startTime": "10:30",
+          "endTime": "11:30",
+          "hours": "09:00–17:00",
+          "lat": 33.594,
+          "lng": 130.4145,
+          "addr": "福岡市博多區冷泉町6-1",
+          "notes": "明治時代博多町家建築"
+        },
+        {
+          "id": "s0vtzdmm",
+          "name": "一蘭拉麵 中洲店",
+          "cat": "food",
+          "startTime": "12:00",
+          "endTime": "13:00",
+          "hours": "24 小時營業（請再確認）",
+          "lat": 33.5953,
+          "lng": 130.4072,
+          "addr": "福岡市博多區中洲5-3-2 2F",
+          "notes": "豚骨拉麵發源地；可調整辣度"
+        },
+        {
+          "id": "sharvono",
+          "name": "天神地下街",
+          "cat": "shop",
+          "startTime": "13:45",
+          "endTime": "16:00",
+          "hours": "10:00–20:30",
+          "lat": 33.5909,
+          "lng": 130.3993,
+          "addr": "福岡市中央區天神",
+          "notes": "連結各百貨，下雨天照逛"
+        },
+        {
+          "id": "s6p9pmzn",
+          "name": "大濠公園",
+          "cat": "sight",
+          "startTime": "16:30",
+          "endTime": "18:00",
+          "hours": "全日開放",
+          "lat": 33.5912,
+          "lng": 130.382,
+          "addr": "福岡市中央區大濠公園1-2",
+          "notes": "繞湖一圈約 2 km，很舒服"
+        },
+        {
+          "id": "sjgyk3e8",
+          "name": "福岡塔",
+          "cat": "sight",
+          "startTime": "18:05",
+          "endTime": "19:30",
+          "hours": "09:30–22:00（4–9月）",
+          "lat": 33.588,
+          "lng": 130.3815,
+          "addr": "福岡市早良區百道浜2-3-26",
+          "notes": "傍晚上去看日落+夜景一次滿足"
+        }
+      ],
+      "cands": []
+    },
+    {
+      "name": "最後購物・回程",
+      "date": "2026-11-26",
+      "mode": "walk",
+      "notes": "確認行李與退房時間；天神→機場地鐵約 15 分。",
+      "stops": [
+        {
+          "id": "sw06h61i",
+          "name": "天神藥妝・伴手禮採買",
+          "cat": "shop",
+          "startTime": "09:30",
+          "endTime": "12:00",
+          "hours": "10:00–20:00 前後",
+          "lat": 33.591,
+          "lng": 130.399,
+          "addr": "福岡市中央區天神",
+          "notes": "藥妝、Royce、明太子一次買齊"
+        },
+        {
+          "id": "sa5virni",
+          "name": "博多站土產最後補貨",
+          "cat": "shop",
+          "startTime": "12:30",
+          "endTime": "13:30",
+          "hours": "08:00–22:00 前後",
+          "lat": 33.59,
+          "lng": 130.4207,
+          "addr": "福岡市博多區博多站中央街",
+          "notes": "站內伴手禮街很齊全"
+        },
+        {
+          "id": "szm7lx90",
+          "name": "福岡機場",
+          "cat": "transport",
+          "startTime": "17:00",
+          "endTime": "19:10",
+          "hours": "",
+          "lat": 33.5837,
+          "lng": 130.4508,
+          "addr": "福岡市博多區下臼井",
+          "notes": "地鐵直達；國際線提早 2 小時到\n19:10分的飛機"
+        }
+      ],
+      "cands": []
+    }
+  ]
+}
