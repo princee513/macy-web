@@ -1,87 +1,988 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Macy's AI Agent 管理介面</title>
-    <style>
-        /* CSS 樣式 */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-        }
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px;
-            text-align: center;
-            border-radius: 10px 10px 0 0;
-        }
-        .main-content {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .card {
-            margin: 20px;
-            padding: 20px;
-            width: calc(33.33% - 40px);
-            background-color: #f7f7f7;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .card:hover {
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>福岡六天五夜・行程規劃器</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#e2704a; --accent-dark:#c95a36; --bg:#f7f5f0; --card:#ffffff;
+    --text:#2b2a28; --muted:#8a877f; --border:#e7e3da; --warn:#c0392b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:'Noto Sans TC',system-ui,-apple-system,'Microsoft JhengHei',sans-serif;
+       color:var(--text);background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+
+  header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
+  header h1{font-size:17px;margin:0;font-weight:700}
+  header .spacer{flex:1}
+  .btn{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:9px;padding:7px 12px;
+       font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  .btn.primary:hover{background:var(--accent-dark);color:#fff}
+  .btn.mini{padding:3px 8px;font-size:12px;border-radius:7px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  #main{flex:1;display:flex;overflow:hidden;min-height:0}
+  #sidebar{width:var(--sidebar-w,480px);min-width:320px;max-width:70vw;overflow-y:auto;
+           border-right:1px solid var(--border);background:var(--bg);flex-shrink:0}
+  #splitter{width:7px;flex-shrink:0;cursor:col-resize;background:transparent;position:relative;z-index:10;
+            transition:background .15s}
+  #splitter:hover,#splitter.dragging{background:rgba(226,112,74,.35)}
+  #splitter::after{content:'';position:absolute;top:50%;left:2px;width:3px;height:34px;transform:translateY(-50%);
+                   border-radius:2px;background:var(--border)}
+  #mapWrap{flex:1;position:relative;min-width:0}
+
+  #dayBar{display:flex;gap:6px;padding:8px 14px;background:#fff;border-bottom:1px solid var(--border);
+          overflow-x:auto;flex-shrink:0;scrollbar-width:thin}
+  .tab{flex-shrink:0;border:1px solid var(--border);background:#fff;border-radius:999px;padding:6px 13px;
+       font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;color:var(--text)}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  .tab .cnt{font-size:11px;background:rgba(0,0,0,.08);border-radius:999px;padding:1px 7px}
+  .tab.active .cnt{background:rgba(255,255,255,.25)}
+
+  .day-head{padding:10px 16px 4px}
+  .day-name{width:100%;font-size:20px;font-weight:700;border:none;background:transparent;padding:2px 0;
+            font-family:inherit;color:var(--text);border-bottom:2px dashed transparent;outline:none}
+  .day-name:focus{border-bottom-color:var(--accent)}
+  .day-sub{display:flex;gap:10px;align-items:center;margin:6px 0 4px;flex-wrap:wrap}
+  .day-sub input[type=date]{border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-family:inherit;font-size:13px;background:#fff}
+  .day-sub select{border:1px solid var(--border);border-radius:7px;padding:4px 6px;font-family:inherit;font-size:13px;background:#fff}
+  .meta{font-size:13px;color:var(--muted);margin:4px 0 8px}
+  .meta b{color:var(--accent);font-weight:600}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 6px}
+  .day-notes{display:block;width:calc(100% - 32px);margin:2px 16px 8px;border:1px solid var(--border);border-radius:9px;
+             padding:8px 10px;font-family:inherit;font-size:13px;resize:vertical;min-height:44px;background:#fff}
+  .day-notes::placeholder{color:#b9b5ac}
+
+  #candList{padding:0 16px 10px;display:flex;flex-direction:column;gap:8px}
+  #stopList{list-style:none;margin:0;padding:4px 16px 4px}
+  #stopList li{position:relative}
+  #stopList li.drag-ghost{opacity:.35}
+  #stopList li.drop-above::before,#stopList li.drop-below::after{
+    content:'';position:absolute;left:10px;right:10px;height:0;border-top:3px dashed var(--accent);z-index:2}
+  #stopList li.drop-above::before{top:-2px}
+  #stopList li.drop-below::after{bottom:-2px}
+
+  .leg{font-size:12px;color:var(--muted);padding:5px 8px 5px 34px;display:flex;align-items:center;gap:7px;
+       cursor:pointer;border-radius:9px;flex-wrap:wrap;transition:background .12s}
+  .leg:hover{background:#fdf1ec}
+  .leg .dash{color:var(--accent)}
+  .leg .mode-pill{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);
+                  border-radius:999px;padding:1.5px 9px;font-size:11.5px;font-weight:600;color:var(--text)}
+  .leg .leg-info{flex-basis:100%;padding-left:2px}
+  .leg .leg-edit{margin-left:auto;opacity:0;font-size:11.5px;color:var(--accent);transition:opacity .12s;white-space:nowrap}
+  .leg:hover .leg-edit{opacity:1}
+  .empty{color:var(--muted);font-size:14px;padding:26px 8px;text-align:center;line-height:1.7}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 12px;
+        box-shadow:0 1px 2px rgba(0,0,0,.04);cursor:pointer}
+  .card.selected{border-color:var(--accent);box-shadow:0 0 0 3px rgba(226,112,74,.18)}
+  .card-top{display:flex;align-items:center;gap:8px}
+  .handle{cursor:grab;color:#c4c0b6;font-size:14px;user-select:none;flex-shrink:0}
+  .num{flex-shrink:0;width:22px;height:22px;border-radius:50%;color:#fff;font-size:12px;font-weight:700;
+       display:flex;align-items:center;justify-content:center}
+  .cname{font-weight:600;font-size:14.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .time-chip{flex-shrink:0;font-size:12px;color:var(--muted);background:var(--bg);border-radius:6px;padding:2px 7px}
+  .card-mid{font-size:12.5px;color:var(--muted);margin-top:5px;display:flex;flex-direction:column;gap:2px}
+  .card-notes{font-size:12.5px;color:#6d6a62;margin-top:5px;background:#faf7f2;border-radius:7px;padding:5px 8px;white-space:pre-wrap}
+  .warn-tag{color:var(--warn);font-size:12px;margin-top:4px}
+  .actions{display:flex;gap:5px;margin-top:7px}
+
+  #mapWrap{position:relative;min-height:0}
+  #map{height:100%;width:100%}
+  .base-switch{position:absolute;top:10px;right:10px;z-index:600;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+  .base-switch button{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:999px;
+      padding:4px 11px;font-size:12px;cursor:pointer;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+  .base-switch button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  .map-tip{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(35,33,30,.85);
+           color:#fff;font-size:13px;padding:8px 16px;border-radius:999px;pointer-events:none;display:none}
+  .map-tip.show{display:block}
+  #map.pick-mode #map{cursor:crosshair}
+  #map.pick-mode{cursor:crosshair}
+
+  .num-pin,.mode-badge-wrap,.cand-pin{background:none;border:none}
+  .card{transition:box-shadow .15s}
+  .card:hover{box-shadow:0 3px 12px rgba(0,0,0,.09)}
+  .tab:hover{border-color:var(--accent)}
+  .field label.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;color:var(--text)}
+  .field label.chk input{width:16px;height:16px;accent-color:var(--accent)}
+
+  /* 候選口袋名單 */
+  .cand-head{display:flex;align-items:center;gap:8px;padding:16px 16px 3px;margin-top:4px;border-top:1px dashed var(--border)}
+  .cand-title{font-weight:700;font-size:14px}
+  .cand-tip{font-size:11.5px;color:var(--muted);padding:2px 18px 8px;line-height:1.55}
+  #candList{padding:0 16px 10px;display:flex;flex-direction:column;gap:8px}
+  .cand{display:flex;gap:9px;background:#fffdf8;border:1px dashed #d8d2c6;border-radius:12px;padding:9px 11px}
+  .cand-dot{width:24px;height:24px;border-radius:50%;background:#fff;border:2.5px solid;display:flex;
+            align-items:center;justify-content:center;font-size:12.5px;flex-shrink:0}
+  .cand-pin .cand-dot{cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,.3)}
+  .cand-body{flex:1;min-width:0}
+  .cand-name{font-weight:600;font-size:13.5px}
+  .cand-sub{font-size:12px;color:var(--muted);margin-top:2px;display:flex;flex-direction:column;gap:1px}
+  .cand-notes{font-size:12px;color:#6d6a62;margin-top:5px;background:#faf7f2;border-radius:7px;padding:5px 8px;white-space:pre-wrap}
+  .cand-act{display:flex;gap:5px;margin-top:7px}
+  .cand-empty{color:var(--muted);font-size:12.5px;padding:2px 2px 4px}
+  .mode-badge{display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid #e2704a;
+              border-radius:999px;font-size:12px;width:30px;height:21px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  .pin-dot{width:26px;height:26px;border-radius:50%;color:#fff;font-size:12.5px;font-weight:700;
+           display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;
+           box-shadow:0 1px 5px rgba(0,0,0,.35);transition:transform .15s}
+  .pin-dot.sel{transform:scale(1.3);box-shadow:0 0 0 3px rgba(226,112,74,.5),0 1px 5px rgba(0,0,0,.35)}
+
+  .side-foot{font-size:12px;color:var(--muted);padding:4px 18px 20px;line-height:1.7}
+
+  .backdrop{position:fixed;inset:0;background:rgba(30,28,25,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+  .backdrop[hidden]{display:none}
+  .modal{background:#fff;border-radius:16px;width:min(580px,94vw);max-height:92vh;overflow-y:auto;padding:20px 22px}
+  .modal h2{margin:0 0 14px;font-size:17px}
+  .field{margin-bottom:11px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;
+      font-family:inherit;font-size:14px;background:#fff;color:var(--text)}
+  .field textarea{resize:vertical;min-height:56px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .search-box{position:relative}
+  .results{border:1px solid var(--border);border-radius:9px;margin-top:6px;overflow:hidden;max-height:190px;overflow-y:auto}
+  .results button{display:block;width:100%;text-align:left;background:#fff;border:none;border-bottom:1px solid var(--border);
+      padding:8px 11px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--text);line-height:1.4}
+  .results button:hover{background:#fdf3ef}
+  .results button b{display:block;font-size:13.5px}
+  .results button span{color:var(--muted);font-size:12px}
+  .picked-line{font-size:13px;background:#f0f9f5;border:1px solid #cfe9dd;border-radius:8px;padding:8px 11px;margin-top:6px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:#2b2a28;color:#fff;
+         padding:10px 18px;border-radius:999px;font-size:13.5px;z-index:2000;transition:transform .25s;opacity:.95;max-width:88vw}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:900px){
+    #main{flex-direction:column}
+    #splitter{width:100%;height:7px;cursor:row-resize}
+    #splitter::after{top:2px;left:50%;width:34px;height:3px;transform:translateX(-50%)}
+    #sidebar{width:100%!important;max-width:100%;flex:1;border-right:none;border-top:1px solid var(--border)}
+    #mapWrap{flex:none;height:44vh}
+    header h1{font-size:15px}
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>我的 DGX Spark (Blackwell GB10) AI Agent 管理介面</h1>
-        </div>
-        <div class="main-content">
-            <!-- 卡片 1 -->
-            <div class="card">
-                <h2>AI Agent 狀態</h2>
-                <p>目前狀態：<span id="agent-status">運行中</span></p>
-                <button onclick="toggleAgent()">切換代理服務器</button>
-            </div>
-            <!-- 卡片 2 -->
-            <div class="card">
-                <h2>模型訓練進度</h2>
-                <p>目前進度：<span id="training-progress">50%</span></p>
-                <button onclick="updateTrainingProgress()">更新進度</button>
-            </div>
-            <!-- 卡片 3 -->
-            <div class="card">
-                <h2>系統資源監控</h2>
-                <p>CPU 使用率：<span id="cpu-usage">30%</span></p>
-                <p>記憶體使用量：<span id="memory-usage">4GB / 16GB</span></p>
-            </div>
-        </div>
+
+<header>
+  <h1>✈️ 福岡六天五夜・行程規劃器</h1>
+  <span class="spacer"></span>
+</header>
+
+<nav id="dayBar"></nav>
+
+<main id="main">
+  <aside id="sidebar">
+    <div class="day-head">
+      <input class="day-name" id="dayName" placeholder="第 N 天">
+      <div class="day-sub">
+        <input type="date" id="dayDate" title="日期">
+        <select id="dayMode" hidden><option value="walk"></option></select>
+        <button class="btn mini" id="btnSortTime" title="依開始時間排序">⇅ 依時間排序</button>
+        <button class="btn mini" id="btnClearDay" title="清空本日行程">🗑 清空這天</button>
+      </div>
+      <div class="meta" id="dayMeta"></div>
+      <div class="toolbar">
+        <button class="btn primary" id="btnAdd">＋ 新增景點</button>
+        <button class="btn" id="btnPick">📍 地圖點選</button>
+        <button class="btn" id="btnFit" title="縮放地圖以顯示本日全部地點">🎯 顯示全日路線</button>
+      </div>
     </div>
+    <textarea class="day-notes" id="dayNotes" rows="2" placeholder="本日備註（住宿飯店、交通票券、天氣提醒…）"></textarea>
+    <ol id="stopList"></ol>
+    <div class="cand-head">
+      <span class="cand-title">📋 候選口袋名單</span>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn mini" id="btnAddCand">＋ 加入候選</button>
+    </div>
+    <div class="cand-tip">查好但還沒定案的店家放這裡，不會算進路線；到時決定了再「轉為行程」。也會顯示在地圖上（白底圓點）。</div>
+    <div id="candList"></div>
+    <div class="side-foot">
+      ⚠️ 範例景點的座標與營業時間僅供參考，請以地圖搜尋與官方公告為準。<br>
+      資料自動儲存在此瀏覽器；換裝置可用「匯出／匯入 JSON」帶走。
+    </div>
+  </aside>
 
-    <script>
-        // JavaScript 代碼
-        function toggleAgent() {
-            // 切換代理服務器邏輯
-            document.getElementById("agent-status").innerText = (document.getElementById("agent-status").innerText === "運行中") ? "已停止" : "運行中";
-        }
+  <div id="splitter" title="拖曳調整側邊欄寬度"></div>
 
-        function updateTrainingProgress() {
-            // 更新模型訓練進度邏輯
-            const progress = Math.min(100, parseInt(document.getElementById("training-progress").innerText) + 10);
-            document.getElementById("training-progress").innerText = progress + "%";
+  <div id="mapWrap">
+    <div id="map"></div>
+    <div class="base-switch" id="baseSwitch"></div>
+    <div class="map-tip" id="mapTip">🗺 點選地圖上任一位置來新增行程</div>
+  </div>
+</main>
+
+<div class="backdrop" id="backdrop" hidden>
+  <div class="modal">
+    <h2 id="modalTitle">新增景點</h2>
+    <div class="field search-box" id="searchField">
+      <label>搜尋地點（Google／OpenStreetMap 上的名稱皆可）</label>
+      <input id="searchInput" placeholder="例如：太宰府天滿宮、 Ichiran Hakata…" autocomplete="off">
+      <div class="results" id="results" hidden></div>
+      <div class="picked-line" id="pickedLine" hidden></div>
+    </div>
+    <div class="field">
+      <label>名稱 *</label>
+      <input id="fName" placeholder="景點／餐廳／飯店名稱">
+    </div>
+    <div class="two">
+      <div class="field">
+        <label>類別</label>
+        <select id="fCat"></select>
+      </div>
+      <div class="field">
+        <label>營業時間／店家資訊</label>
+        <input id="fHours" placeholder="例：10:00–21:00，週三休">
+      </div>
+    </div>
+    <div class="two">
+      <div class="field">
+        <label>開始時間</label>
+        <input type="time" id="fStart">
+      </div>
+      <div class="field">
+        <label>結束時間</label>
+        <input type="time" id="fEnd">
+      </div>
+    </div>
+    <div class="field">
+      <label>地址</label>
+      <input id="fAddr" placeholder="選自搜尋結果或自動帶入">
+      <div class="picked-line" id="coordLine" hidden></div>
+    </div>
+    <div class="field">
+      <label>備註</label>
+      <textarea id="fNotes" placeholder="預約、排隊、想吃的東西、交通方式…"></textarea>
+    </div>
+    <div class="field">
+      <label>移動到</label>
+      <select id="fMove"></select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnCancel">取消</button>
+      <button class="btn primary" id="btnSave">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+/* ================= 基本資料 ================= */
+const STORAGE_KEY = 'fukuoka-trip-planner-v1';
+const CATS = {
+  food:      {label:'🍜 美食', color:'#e07856'},
+  sight:     {label:'📷 景點', color:'#2a9d8f'},
+  shop:      {label:'🛍️ 購物', color:'#d9a441'},
+  hotel:     {label:'🏨 住宿', color:'#7d6b9e'},
+  transport: {label:'🚉 交通', color:'#4d7fb5'},
+  other:     {label:'📌 其他', color:'#8a8f98'},
+};
+
+function seedData(){
+  const S = (name,cat,start,end,hours,lat,lng,addr,notes,transit)=>({
+    id:'s'+Math.random().toString(36).slice(2,9), name, cat, startTime:start, endTime:end,
+    hours, lat, lng, addr:addr||'', notes:notes||'', transit:transit||null
+  });
+  const C = (name,cat,hours,lat,lng,addr,notes)=>({
+    id:'c'+Math.random().toString(36).slice(2,9), name, cat, hours:hours||'',
+    lat, lng, addr:addr||'', notes:notes||''
+  });
+  return { version:3, days:[
+    { name:'抵達・博多', date:'', notes:'入境後買地鐵一日券／ICOCA。行李先放飯店。', stops:[
+      S('福岡機場','transport','14:00','15:00','全日',33.5837,130.4508,'福岡市博多區下臼井','地鐵機場線直達博多站約 5 分鐘'),
+      S('JR博多站・屋上花園','sight','15:30','17:00','10:00–22:00（設施而異）',33.5900,130.4207,'福岡市博多區博多站中央街1-1','頂樓「燕林廣場」可看飛機起降與夜景',{mode:'train',info:'福岡機場線 地鐵約 5 分（¥260）'}),
+      S('博多運河城','shop','17:15','19:00','10:00–21:00（店鋪而異）',33.5902,130.4113,'福岡市博多區住吉1-2','噴水秀每整點；地下街美食街',{mode:'walk',info:'博多站地下街步行約 10 分'}),
+      S('中洲屋台街','food','19:30','21:30','約 18:00–24:00',33.5962,130.4068,'福岡市博多區中洲','人氣攤位需排隊；先確認價格再入座',{mode:'walk',info:'沿春吉橋步行約 12 分'}),
+    ], cands:[
+      C('一蘭拉麵 中洲本店','food','24 小時',33.5953,130.4072,'福岡市博多區中洲5-3-2','屋台排不到的備案'),
+      C('暖暮 中洲店','food','11:00–隔日 03:00',33.5945,130.4058,'福岡市博多區中洲','豚骨偏濃；常客多名'),
+    ]},
+    { name:'門司港・下關', date:'', notes:'JR 由博多往小倉轉門司港；關門聯絡船 5 分鐘到唐戶市場。', stops:[
+      S('博多站出發','transport','08:35','10:05','',33.5900,130.4207,'福岡市博多區','JR鹿兒島本線快速約 1.5 小時'),
+      S('門司港懷舊地區','sight','10:15','12:00','全日（設施 09:00–18:00 前後）',33.9073,130.9395,'北九州市門司區','舊門司稅關、藍翼吊橋（開橋 10:00 起）',{mode:'walk',info:'門司港站出站即到'}),
+      S('唐戶市場（午餐）','food','12:30','14:15','約 08:00–15:00，週三與特定日休',33.9569,130.9398,'下關市唐戶町5-50','河豚生魚片蓋飯；關門聯絡船 5 分（¥800 往返）',{mode:'ferry',info:'關門聯絡船 門司港→唐戶 5 分'}),
+      S('小倉城','sight','15:30','17:00','09:00–18:00（4–10月）',33.8862,130.8788,'北九州市小倉北區城內2-1','回程順路，旁邊有 Aru Aru City 動漫街',{mode:'train',info:'JR下關→小倉 約 20 分（¥320）'}),
+      S('博多站','transport','18:45','',  '',33.5900,130.4207,'福岡市博多區','新幹線小倉→博多約 15 分',{mode:'shinkansen',info:'新幹線のぞみ 約 15 分（¥2,320）'}),
+    ], cands:[
+      C('門司港レトロ Sirnight','food','11:00–16:00',33.9075,130.9400,'北九州市門司區','烤咖哩候選；門司港名物'),
+    ]},
+    { name:'太宰府一日遊', date:'', notes:'西鐵電車：天神→太宰府約 30 分（二日市轉車或觀光直通車）。', stops:[
+      S('太宰府天滿宮','sight','09:45','11:30','06:30–19:00（季節變動）',33.5241,130.5326,'太宰府市宰府4-7-1','學問之神；牛御神像、飛梅傳說',{mode:'train',info:'西鐵天神大牟田線→二日市轉太宰府線，約 30 分（¥620）'}),
+      S('表參道商店街（含梅ヶ枝餅）','food','11:30','13:15','各店不一',33.5236,130.5317,'太宰府市宰府','邊走邊吃梅ヶ枝餅；星巴克木條建築',{mode:'walk'}),
+      S('九州國立博物館','sight','13:30','15:30','09:30–17:00，週一休',33.5258,130.5294,'太宰府市石坂4-7-2','連著天滿宮後山，玻璃建築',{mode:'walk',info:'穿表參道步行 10 分'}),
+      S('牛雜鍋晚餐（天神）','food','17:30','19:30','多為 17:00–23:00',33.5902,130.3996,'福岡市中央區天神','博多名物もつ鍋，建議先訂位',{mode:'train',info:'西鐵太宰府線→二日市轉天神大牟田線，約 30 分'}),
+    ], cands:[
+      C('とり皮 天本','food','17:00–22:00，週日休',33.5905,130.3990,'福岡市中央區天神','串燒雞皮名店，座位極少'),
+      C('STANDARD BAKERY','food','08:00–19:00',33.5240,130.5330,'太宰府市宰府','早上先買麵包當點心'),
+    ]},
+    { name:'由布院（湯布院）一日遊', date:'', notes:'特急「由布」博多直達約 1 小時 50 分；假日請提早劃位。', stops:[
+      S('博多站出發（特急由布）','transport','08:25','10:10','',33.5900,130.4207,'福岡市博多區','全車指定席，記得先劃位'),
+      S('由布院車站','transport','10:10','10:45','',33.2704,131.3584,'由布市湯布院町川上','站前可寄放行李或租自行車'),
+      S('湯之坪街道（含午餐）','shop','10:45','13:15','各店不一',33.2723,131.3571,'由布市湯布院町','B-speak 金賞布丁、雜貨小店慢慢逛',{mode:'walk',info:'站前步行 3 分'}),
+      S('金鱗湖','sight','13:30','15:00','全日（湖畔店鋪 09:00–17:00 前後）',33.2767,131.3565,'由布市湯布院町川上','清晨湖面霧氣最有名',{mode:'walk',info:'沿湯之坪步行 12 分'}),
+      S('由布院車站（返程）','transport','16:20','18:15','',33.2704,131.3584,'由布市湯布院町川上','特急由布返回博多',{mode:'walk'}),
+      S('博多站晚餐','food','18:30','20:15','各店不一',33.5900,130.4207,'福岡市博多區博多站中央街','站內選擇非常多'),
+    ], cands:[
+      C('山海言 由布院','food','11:00–15:00',33.2730,131.3575,'由布市湯布院町','湯之坪內人氣義大利麵；開店就去'),
+    ]},
+    { name:'博多市區經典', date:'', notes:'', stops:[
+      S('櫛田神社','sight','09:00','10:30','06:00–18:00（授付至17:00）',33.5935,130.4146,'福岡市博多區上川端町1-41','看山笠花車；博多町家故鄉館就在旁邊',{mode:'train',info:'地鐵中洲川端站步行 5 分'}),
+      S('博多町家故鄉館','sight','10:30','11:30','09:00–17:00',33.5940,130.4145,'福岡市博多區冷泉町6-1','明治時代博多町家建築',{mode:'walk'}),
+      S('一蘭拉麵 中洲店','food','12:00','13:00','24 小時（請再確認）',33.5953,130.4072,'福岡市博多區中洲5-3-2 2F','豚骨拉麵發源地；可調整辣度',{mode:'walk',info:'步行約 10 分'}),
+      S('天神地下街','shop','13:45','16:00','10:00–20:30',33.5909,130.3993,'福岡市中央區天神','連結各百貨，下雨天照逛',{mode:'subway',info:'地鐵中洲川端→天神 3 分（¥200）'}),
+      S('大濠公園','sight','16:30','18:00','全日開放',33.5912,130.3820,'福岡市中央區大濠公園1-2','繞湖一圈約 2 km，很舒服',{mode:'subway',info:'地鐵天神→大濠公園 4 分（¥200）'}),
+      S('福岡塔','sight','18:05','19:30','09:30–22:00（4–9月）',33.5880,130.3815,'福岡市早良區百道浜2-3-26','傍晚上去看日落+夜景一次滿足',{mode:'walk',info:'步行約 15 分'}),
+    ], cands:[
+      C('SHIPS 天神','shop','11:00–20:00',33.5920,130.3990,'福岡市中央區天神2','想看的美式品牌；在天神 OIOI'),
+      C('肉BAR UMA','food','17:00–23:30',33.5930,130.3985,'福岡市中央區天神','塔看完的晚餐候選，可走路到'),
+    ]},
+    { name:'最後購物・回程', date:'', notes:'確認行李與退房時間；天神→機場地鐵約 15 分。', stops:[
+      S('天神藥妝・伴手禮採買','shop','09:30','12:00','10:00–20:00 前後',33.5910,130.3990,'福岡市中央區天神','藥妝、Royce、明太子一次買齊'),
+      S('博多站土產最後補貨','shop','12:30','13:30','08:00–22:00 前後',33.5900,130.4207,'福岡市博多區博多站中央街','站內伴手禮街很齊全',{mode:'subway',info:'地鐵天神→博多 5 分（¥200）'}),
+      S('福岡機場','transport','14:00','14:40','',33.5837,130.4508,'福岡市博多區下臼井','地鐵直達；國際線提早 2 小時到',{mode:'subway',info:'地鐵機場線 約 5 分（¥260）'}),
+    ], cands:[]},
+  ]};
+}
+
+/* ================= 狀態 ================= */
+let state = loadState();
+let currentDay = 0;
+let selectedStopId = null;
+let pickMode = false;
+let modalCtx = null;      // {mode, stopId, candId, dayIdx, picked}
+let markers = [];
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      if(s && Array.isArray(s.days) && s.days.length){
+        s.days.forEach(d=>{
+          if(!Array.isArray(d.cands)) d.cands=[];
+          d.stops.forEach(st=>{ if(st.transit && typeof st.transit==='string') st.transit={mode:'other',info:st.transit}; });
+        });
+        if(!s.version || s.version<3){
+          // v2→v3：第 2 天（博多市區經典）與第 5 天（門司港・下關）對調
+          if(s.days.length>=5){ const t=s.days[1]; s.days[1]=s.days[4]; s.days[4]=t; }
+          s.version=3;
+          setTimeout(()=>{ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(s)); }catch(e){} },0);
         }
-    </script>
+        return s;
+      }
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(seedData()));
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function day(){ return state.days[currentDay]; }
+
+/* ================= 小工具 ================= */
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function havKm(a,b){
+  const R=6371000, r=Math.PI/180;
+  const dLat=(b.lat-a.lat)*r, dLng=(b.lng-a.lng)*r;
+  const x=Math.sin(dLat/2)**2 + Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x))/1000;
+}
+function fmtKm(km){ return km<1 ? Math.round(km*1000)+' m' : km.toFixed(1)+' km'; }
+function fmtMin(m){ m=Math.round(m); if(m<60) return m+' 分'; const h=Math.floor(m/60); return h+' 小時 '+(m%60)+' 分'; }
+
+const TRANSIT_MODES={
+  walk:      {label:'🚶 步行',    speedKmh:4.5,  detour:1.35, color:'#8d8a82', dash:'6 8'},
+  subway:    {label:'🚇 地鐵',    speedKmh:28,   detour:1.30, color:'#3a7bd5', dash:null},
+  train:     {label:'🚃 電車/JR', speedKmh:45,   detour:1.35, color:'#1f9d55', dash:null},
+  shinkansen:{label:'🚅 新幹線',  speedKmh:160,  detour:1.15, color:'#d43d2a', dash:null},
+  bus:       {label:'🚌 巴士',    speedKmh:18,   detour:1.45, color:'#e09b2d', dash:'10 6'},
+  ferry:     {label:'⛴️ 船',      speedKmh:20,   detour:1.15, color:'#6a5acd', dash:'2 7'},
+  taxi:      {label:'🚕 計程車',  speedKmh:30,   detour:1.30, color:'#c9a227', dash:null},
+  bike:      {label:'🚲 自行車',  speedKmh:12,   detour:1.40, color:'#0e9594', dash:'8 6'},
+  other:     {label:'🧭 其他',    speedKmh:20,   detour:1.40, color:'#8a8f98', dash:'4 8'},
+};
+function transitAutoMinutes(mode,km){
+  const m=TRANSIT_MODES[mode]||TRANSIT_MODES.other;
+  return (km/m.speedKmh)*60 + (mode==='walk'?0:6); // 非步行抓 6 分等車/轉乘
+}
+let toastTimer=null;
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ================= 地圖 ================= */
+const map = L.map('map',{zoomControl:true}).setView([33.5904,130.4017],13);
+
+const BASEMAPS={
+  esri:{label:'🗺 街道', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr:'Tiles &copy; Esri', maxZoom:19},
+  osm:{label:'🅞 OSM', url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+       attr:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom:19},
+  gsi:{label:'🇯🇵 地理院', url:'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
+       attr:'&copy; <a href="https://maps.gsi.go.jp">国土地理院</a>', maxZoom:18},
+  sat:{label:'🛰 衛星', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+       attr:'Imagery &copy; Esri', maxZoom:18},
+};
+const BASE_KEY='fukuoka-trip-basemap';
+let baseLayer=null;
+function setBasemap(key){
+  const cfg=BASEMAPS[key]; if(!cfg) return;
+  localStorage.setItem(BASE_KEY,key);
+  if(baseLayer) map.removeLayer(baseLayer);
+  baseLayer=L.tileLayer(cfg.url,{maxZoom:cfg.maxZoom,attribution:cfg.attr});
+  baseLayer.on('tileerror',()=>{
+    if(!baseLayer._fellBack){
+      baseLayer._fellBack=true;
+      toast('此圖磚來源載入失敗，自動切換…');
+      const keys=Object.keys(BASEMAPS);
+      const next=keys[(keys.indexOf(key)+1)%keys.length];
+      setBasemap(next);
+    }
+  });
+  baseLayer.addTo(map);
+  document.querySelectorAll('#baseSwitch button').forEach(b=>b.classList.toggle('active',b.dataset.key===key));
+}
+const sw=$('baseSwitch');
+Object.entries(BASEMAPS).forEach(([key,cfg])=>{
+  const b=document.createElement('button');
+  b.textContent=cfg.label; b.dataset.key=key;
+  b.onclick=()=>setBasemap(key);
+  sw.appendChild(b);
+});
+const preferred=localStorage.getItem(BASE_KEY);
+setBasemap(BASEMAPS[preferred]?preferred:'esri');
+const overlay = L.layerGroup().addTo(map);
+let fitPending = false;
+
+/* ================= 路線計算（直線 × 交通方式繞行係數） ================= */
+function legKm(di,i){
+  const d=state.days[di];
+  const straight=havKm(d.stops[i],d.stops[i+1]);
+  const tr=d.stops[i+1].transit;
+  const m=TRANSIT_MODES[tr?tr.mode:'walk']||TRANSIT_MODES.other;
+  return straight*m.detour;
+}
+function dayStats(di){
+  const d=state.days[di];
+  let km=0,min=0;
+  for(let i=0;i<d.stops.length-1;i++){
+    const kmI=legKm(di,i);
+    km+=kmI;
+    const tr=d.stops[i+1].transit;
+    min += (tr && tr.min!=null && tr.min!=='' && isFinite(+tr.min)) ? +tr.min : transitAutoMinutes(tr?tr.mode:'walk',kmI);
+  }
+  return {km,min,n:d.stops.length};
+}
+
+/* ================= 渲染 ================= */
+function renderTabs(){
+  const box=$('dayBar'); box.innerHTML='';
+  state.days.forEach((d,i)=>{
+    const b=document.createElement('button');
+    b.className='tab'+(i===currentDay?' active':'');
+    b.innerHTML='第'+(i+1)+'天'+(d.name?'・'+esc(d.name):'')+' <span class="cnt">'+d.stops.length+'</span>';
+    if(d.date) b.title=d.date;
+    b.onclick=()=>switchDay(i);
+    box.appendChild(b);
+  });
+}
+function switchDay(i){
+  if(i===currentDay) return;
+  currentDay=i; selectedStopId=null; setPickMode(false);
+  fitPending=true;
+  renderAll();
+}
+
+function renderDay(){
+  const d=day();
+  $('dayName').value=d.name;
+  $('dayDate').value=d.date||'';
+  $('dayMode').value=d.mode||'walk';
+  $('dayNotes').value=d.notes||'';
+
+  const st=dayStats(currentDay);
+  $('dayMeta').innerHTML = st.n===0 ? '尚無行程，點「＋ 新增景點」或「📍 地圖點選」開始安排'
+    : '<b>'+st.n+'</b> 個地點 ・ 總距離約 <b>'+fmtKm(st.km)+'</b> ・ 移動約 <b>'+fmtMin(st.min)+'</b>';
+
+  const list=$('stopList'); list.innerHTML='';
+  if(d.stops.length===0){
+    list.innerHTML='<div class="empty">這天還沒有行程 🏖️<br>用地圖搜尋或直接點地圖來新增吧！</div>';
+  }
+  d.stops.forEach((s,i)=>{
+    const li=document.createElement('li'); li.dataset.id=s.id;
+
+    if(i>0){
+      const tr=s.transit||{mode:'walk'};
+      const tm=TRANSIT_MODES[tr.mode]||TRANSIT_MODES.other;
+      const km=legKm(currentDay,i-1);
+      const min=(tr.min!=null && tr.min!=='' && isFinite(+tr.min)) ? +tr.min : transitAutoMinutes(tr.mode,km);
+      const legDiv=document.createElement('div'); legDiv.className='leg';
+      legDiv.title='點擊編輯這段交通';
+      legDiv.innerHTML='<span class="dash">↳</span>'
+        +'<span class="mode-pill">'+tm.label+'</span>'
+        +'<span>'+fmtKm(km)+' ・ 約 '+fmtMin(min)+'</span>'
+        +'<span class="leg-edit">✏️ 改</span>'
+        +(tr.info?'<span class="leg-info">🚉 '+esc(tr.info)+'</span>':'');
+      legDiv.addEventListener('click',()=>openLegModal(i));
+      li.appendChild(legDiv);
+    }
+
+    const cat=CATS[s.cat]||CATS.other;
+    const card=document.createElement('div');
+    card.className='card'+(s.id===selectedStopId?' selected':'');
+    let html='<div class="card-top">'
+      +'<span class="handle" title="拖曳排序">⠿</span>'
+      +'<span class="num" style="background:'+cat.color+'">'+(i+1)+'</span>'
+      +'<span class="cname">'+esc(s.name)+'</span>'
+      +(s.startTime||s.endTime?'<span class="time-chip">🕐 '+esc(s.startTime||'?')+(s.endTime?'–'+esc(s.endTime):'')+'</span>':'')
+      +'</div>';
+    const mids=[];
+    mids.push('<span>'+cat.label+'</span>');
+    if(s.hours) mids.push('<span>🕒 '+esc(s.hours)+'</span>');
+    if(s.addr) mids.push('<span>📍 '+esc(s.addr)+'</span>');
+    if(!s.addr) mids.push('<span>📍 '+s.lat.toFixed(4)+', '+s.lng.toFixed(4)+'</span>');
+    html+='<div class="card-mid">'+mids.join('')+'</div>';
+    if(s.notes) html+='<div class="card-notes">📝 '+esc(s.notes)+'</div>';
+    if(i>0){
+      const prev=d.stops[i-1];
+      if(prev.endTime && s.startTime && s.startTime<prev.endTime)
+        html+='<div class="warn-tag">⚠️ 與上一個行程時間重疊</div>';
+    }
+    html+='<div class="actions">'
+      +'<button class="btn mini" data-act="edit">✏️ 編輯</button>'
+      +'<button class="btn mini" data-act="del">🗑 刪除</button>'
+      +'<span style="flex:1"></span>'
+      +'<button class="btn mini" data-act="up" title="上移">▲</button>'
+      +'<button class="btn mini" data-act="down" title="下移">▼</button>'
+      +'</div>';
+    card.innerHTML=html;
+    card.addEventListener('click',e=>{
+      if(e.target.closest('button')) return;
+      selectStop(s.id,true);
+    });
+    const handle=card.querySelector('.handle');
+    handle.addEventListener('mousedown',()=>{ li.draggable=true; });
+    document.addEventListener('mouseup',()=>{ li.draggable=false; },{once:false});
+    li.appendChild(card);
+    list.appendChild(li);
+  });
+  renderTabs();
+  renderCands();
+}
+
+function renderCands(){
+  const d=day(), box=$('candList'); box.innerHTML='';
+  if(!d.cands.length){
+    box.innerHTML='<div class="cand-empty">還沒有候選店家。查到不錯的店先加進來備用！</div>';
+    return;
+  }
+  d.cands.forEach((cd,i)=>{
+    const cat=CATS[cd.cat]||CATS.other;
+    const el=document.createElement('div'); el.className='cand';
+    let html='<span class="cand-dot" style="border-color:'+cat.color+';color:'+cat.color+'" title="候選店家（地圖上白底圓點）">☆</span>'
+      +'<div class="cand-body">'
+      +'<div class="cand-name">'+esc(cd.name)+'</div>'
+      +'<div class="cand-sub">'
+      +'<span>'+cat.label+(cd.hours?' ・ 🕒 '+esc(cd.hours):'')+'</span>'
+      +(cd.addr?'<span>📍 '+esc(cd.addr)+'</span>':'')
+      +'</div>'
+      +(cd.notes?'<div class="cand-notes">📝 '+esc(cd.notes)+'</div>':'')
+      +'<div class="cand-act">'
+      +'<button class="btn mini" data-act="promote" data-i="'+i+'" title="排進今天行程">⬆ 轉為行程</button>'
+      +'<button class="btn mini" data-act="cedit" data-i="'+i+'">✏️</button>'
+      +'<button class="btn mini" data-act="cdel" data-i="'+i+'">🗑</button>'
+      +'</div></div>';
+    el.innerHTML=html;
+    box.appendChild(el);
+  });
+}
+
+$('candList').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-act]'); if(!btn) return;
+  const i=+btn.dataset.i, d=day();
+  const act=btn.dataset.act;
+  if(act==='cdel'){
+    if(confirm('刪除候選「'+d.cands[i].name+'」？')){ d.cands.splice(i,1); renderCands(); renderMap(); save(); }
+    return;
+  }
+  if(act==='cedit'){ openModal('cand-edit',null,d.cands[i].id); return; }
+  if(act==='promote'){
+    const cd=d.cands[i];
+    const stop={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+      name:cd.name,cat:cd.cat,startTime:'',endTime:'',hours:cd.hours,
+      lat:cd.lat,lng:cd.lng,addr:cd.addr,notes:cd.notes,transit:null};
+    d.stops.push(stop); d.cands.splice(i,1);
+    renderAll();
+    toast('已把「'+cd.name+'」排進今天行程，記得調整順序與時間');
+  }
+});
+$('btnAddCand').onclick=()=>openModal('cand');
+
+function renderMap(){
+  overlay.clearLayers(); markers=[];
+  const d=day();
+  const pts=[];
+  d.stops.forEach((s,i)=>{
+    const cat=CATS[s.cat]||CATS.other;
+    const icon=L.divIcon({
+      className:'num-pin',
+      html:'<div class="pin-dot'+(s.id===selectedStopId?' sel':'')+'" style="background:'+cat.color+'">'+(i+1)+'</div>',
+      iconSize:[26,26], iconAnchor:[13,13]
+    });
+    const m=L.marker([s.lat,s.lng],{icon, zIndexOffset: s.id===selectedStopId?1000:0}).addTo(overlay);
+    m.bindPopup('<b>'+esc(s.name)+'</b>'+(s.hours?'<br>🕒 '+esc(s.hours):'')+(s.addr?'<br>📍 '+esc(s.addr):''));
+    m.on('click',()=>selectStop(s.id,false));
+    markers.push(m);
+    pts.push([s.lat,s.lng]);
+  });
+  d.cands.forEach(cd=>{
+    const cat=CATS[cd.cat]||CATS.other;
+    const icon=L.divIcon({
+      className:'cand-pin',
+      html:'<div class="pin-dot cand-dot" style="border-color:'+cat.color+';color:'+cat.color+'">☆</div>',
+      iconSize:[24,24], iconAnchor:[12,12]
+    });
+    const m=L.marker([cd.lat,cd.lng],{icon, zIndexOffset:-500}).addTo(overlay);
+    m.bindPopup('<b>☆ 候選：'+esc(cd.name)+'</b>'+(cd.hours?'<br>🕒 '+esc(cd.hours):'')+(cd.addr?'<br>📍 '+esc(cd.addr):'')+'<br><i>在候選名單中，未排入行程</i>');
+    markers.push(m);
+  });
+  if(d.stops.length>1){
+    for(let i=0;i<d.stops.length-1;i++){
+      const tr=d.stops[i+1].transit||{mode:'walk'};
+      const tm=TRANSIT_MODES[tr.mode]||TRANSIT_MODES.other;
+      L.polyline([[d.stops[i].lat,d.stops[i].lng],[d.stops[i+1].lat,d.stops[i+1].lng]],
+        {color:tm.color,weight:tm.dash?3:4,opacity:.85,dashArray:tm.dash}).addTo(overlay);
+    }
+  }
+  if(fitPending && pts.length){
+    fitPending=false;
+    map.fitBounds(L.latLngBounds(pts),{padding:[55,55],maxZoom:15});
+  }
+}
+
+function renderAll(){ renderDay(); renderMap(); save(); }
+
+function selectStop(id, fly){
+  selectedStopId=id;
+  renderDay(); renderMap();
+  if(fly){ const m=markers[day().stops.findIndex(s=>s.id===id)]; if(m){ map.flyTo(m.getLatLng(),Math.max(map.getZoom(),14)); m.openPopup(); } }
+}
+
+/* ================= 新增／編輯彈窗 ================= */
+function openModal(mode, stopId, candId){
+  const d=day();
+  modalCtx={mode, stopId:stopId||null, candId:candId||null, dayIdx:currentDay, picked:null};
+  const isCand = mode==='cand' || mode==='cand-edit';
+  $('modalTitle').textContent = mode==='add' ? '新增景點 ・ 第'+(currentDay+1)+'天'
+    : mode==='cand' ? '加入候選口袋名單 ・ 第'+(currentDay+1)+'天'
+    : mode==='cand-edit' ? '編輯候選店家' : '編輯景點';
+  $('searchInput').value=''; $('results').hidden=true; $('pickedLine').hidden=true; $('coordLine').hidden=true;
+  $('fCat').innerHTML=Object.entries(CATS).map(([k,v])=>'<option value="'+k+'">'+v.label+'</option>').join('');
+  $('fMove').hidden=isCand;
+  $('fStart').closest('.field').hidden=isCand;
+  $('fEnd').closest('.field').hidden=isCand;
+  $('fMove').innerHTML='<option value="'+currentDay+'">留在第'+(currentDay+1)+'天</option>'
+    + state.days.map((dd,i)=> i===currentDay?'':'<option value="'+i+'">移到第'+(i+1)+'天'+(dd.name?'（'+esc(dd.name)+'）':'')+'</option>').join('');
+  if(mode==='edit'){
+    const s=d.stops.find(x=>x.id===stopId); if(!s) return;
+    $('fName').value=s.name; $('fCat').value=s.cat; $('fStart').value=s.startTime||'';
+    $('fEnd').value=s.endTime||''; $('fHours').value=s.hours||''; $('fAddr').value=s.addr||'';
+    modalCtx.picked={lat:s.lat,lng:s.lng};
+    showCoords(s.lat,s.lng);
+    $('fNotes').value=s.notes||'';
+  }else if(isCand){
+    let cd=null;
+    if(mode==='cand-edit') cd=d.cands.find(x=>x.id===candId);
+    if(cd){
+      $('fName').value=cd.name; $('fCat').value=cd.cat; $('fHours').value=cd.hours||'';
+      $('fAddr').value=cd.addr||''; modalCtx.picked={lat:cd.lat,lng:cd.lng};
+      showCoords(cd.lat,cd.lng);
+      $('fNotes').value=cd.notes||'';
+    }else{
+      $('fName').value=''; $('fCat').value='food'; $('fHours').value='';
+      $('fAddr').value=''; $('fNotes').value='';
+    }
+  }else{
+    $('fName').value=''; $('fStart').value=''; $('fEnd').value=''; $('fHours').value='';
+    $('fAddr').value=''; $('fNotes').value='';
+  }
+  $('backdrop').hidden=false;
+  setTimeout(()=>$('searchInput').focus(),50);
+}
+function closeModal(){ $('backdrop').hidden=true; modalCtx=null; }
+
+function showCoords(lat,lng){
+  $('coordLine').textContent='📍 座標：'+lat.toFixed(5)+', '+lng.toFixed(5);
+  $('coordLine').hidden=false;
+}
+function setPicked(p){
+  modalCtx.picked={lat:p.lat,lng:p.lng};
+  if(p.addr) $('fAddr').value=p.addr;
+  if(p.name && !$('fName').value) $('fName').value=p.name;
+  showCoords(p.lat,p.lng);
+  if(p.addr){
+    $('pickedLine').textContent='已選擇：'+p.addr;
+    $('pickedLine').hidden=false;
+  }
+}
+
+$('btnSave').onclick=()=>{
+  if(!modalCtx) return;
+  const name=$('fName').value.trim();
+  if(!name){ $('fName').focus(); toast('請填寫名稱'); return; }
+  const lat=modalCtx.picked?modalCtx.picked.lat:NaN, lng=modalCtx.picked?modalCtx.picked.lng:NaN;
+  if(!isFinite(lat)||!isFinite(lng)){ toast('請先用「搜尋」或「地圖點選」設定位置'); return; }
+  const mode=modalCtx.mode;
+  if(mode==='cand' || mode==='cand-edit'){
+    const d=state.days[modalCtx.dayIdx];
+    const data={name, cat:$('fCat').value, hours:$('fHours').value.trim(),
+      addr:$('fAddr').value.trim(), lat, lng, notes:$('fNotes').value.trim()};
+    if(mode==='cand'){
+      d.cands.push(Object.assign({id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)},data));
+    }else{
+      const cd=d.cands.find(x=>x.id===modalCtx.candId);
+      if(cd) Object.assign(cd,data);
+    }
+    closeModal(); renderCands(); renderMap(); save();
+    return;
+  }
+  const data={
+    name, cat:$('fCat').value,
+    startTime:$('fStart').value, endTime:$('fEnd').value,
+    hours:$('fHours').value.trim(), addr:$('fAddr').value.trim(),
+    lat, lng, notes:$('fNotes').value.trim()
+  };
+  const targetDay=parseInt($('fMove').value,10);
+  if(mode==='add'){
+    state.days[targetDay].stops.push(Object.assign({id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)},data));
+    if(targetDay!==currentDay) toast('已加入第'+(targetDay+1)+'天');
+  }else{
+    const d=state.days[modalCtx.dayIdx];
+    const idx=d.stops.findIndex(x=>x.id===modalCtx.stopId);
+    if(idx>=0){
+      const [moved]=d.stops.splice(idx,1);
+      state.days[targetDay].stops.push(Object.assign(moved,data));
+    }
+  }
+  const refresh=Math.max(currentDay,targetDay);
+  closeModal();
+  if(targetDay!==currentDay){ currentDay=targetDay; selectedStopId=null; fitPending=true; }
+  renderAll();
+};
+$('btnCancel').onclick=closeModal;
+$('backdrop').addEventListener('click',e=>{ if(e.target===$('backdrop')) closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('backdrop').hidden) closeModal(); });
+
+/* 搜尋（Nominatim） */
+let searchTimer=null;
+$('searchInput').addEventListener('input',()=>{
+  clearTimeout(searchTimer);
+  const q=$('searchInput').value.trim();
+  if(q.length<2){ $('results').hidden=true; return; }
+  searchTimer=setTimeout(()=>doSearch(q),450);
+});
+async function doSearch(q){
+  const box=$('results');
+  box.innerHTML='<button disabled>搜尋中…</button>'; box.hidden=false;
+  try{
+    const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=zh-TW&q='+encodeURIComponent(q);
+    const r=await fetch(url); const j=await r.json();
+    if(!j.length){ box.innerHTML='<button disabled>找不到結果，試試別的關鍵字</button>'; return; }
+    box.innerHTML='';
+    j.forEach(item=>{
+      const b=document.createElement('button');
+      const parts=item.display_name.split(',');
+      b.innerHTML='<b>'+esc(parts[0])+'</b><span>'+esc(parts.slice(1,4).join(','))+'</span>';
+      b.onclick=()=>{
+        box.hidden=true; $('searchInput').value=parts[0];
+        setPicked({lat:parseFloat(item.lat),lng:parseFloat(item.lon),addr:item.display_name.split(',').slice(0,3).join(','),name:parts[0]});
+      };
+      box.appendChild(b);
+    });
+  }catch(e){
+    box.innerHTML='<button disabled>搜尋失敗（網路問題），可手動輸入名稱與座標</button>';
+  }
+}
+
+/* ================= 交通段編輯彈窗 ================= */
+function openLegModal(stopIdx){
+  const d=day(), s=d.stops[stopIdx], prev=d.stops[stopIdx-1];
+  if(!s||!prev) return;
+  const tr=s.transit||{mode:'walk',info:'',min:''};
+  const km=legKm(currentDay,stopIdx-1);
+  const auto=transitAutoMinutes(tr.mode,km);
+  const bd=document.createElement('div'); bd.className='backdrop'; bd.id='legBackdrop';
+  bd.innerHTML='<div class="modal" style="width:min(460px,94vw)">'
+    +'<h2>🚏 交通：'+esc(prev.name)+' → '+esc(s.name)+'</h2>'
+    +'<div class="field"><label>交通方式</label>'
+    +'<select id="lgMode">'+Object.entries(TRANSIT_MODES).map(([k,v])=>'<option value="'+k+'"'+(k===tr.mode?' selected':'')+'>'+v.label+'</option>').join('')+'</select></div>'
+    +'<div class="two"><div class="field"><label>移動距離</label><input id="lgKm" value="'+fmtKm(km)+'" disabled></div>'
+    +'<div class="field"><label>耗時（分鐘，留空＝自動估計 '+Math.round(auto)+' 分）</label><input type="number" id="lgMin" min="0" step="1" value="'+(tr.min!=null?tr.min:'')+'" placeholder="自動"></div></div>'
+    +'<div class="field"><label>交通資訊（路線、車站、票價、班次…）</label>'
+    +'<textarea id="lgInfo" rows="3" placeholder="例：地鐵機場線 博多→中洲川端 3 分（¥200）；西鐵二日市轉車">'+esc(tr.info||'')+'</textarea></div>'
+    +'<div class="modal-foot"><button class="btn" id="lgClear">清除這段</button><span style="flex:1"></span>'
+    +'<button class="btn" id="lgCancel">取消</button><button class="btn primary" id="lgOk">儲存</button></div></div>';
+  document.body.appendChild(bd);
+  bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
+  bd.querySelector('#lgCancel').onclick=()=>bd.remove();
+  bd.querySelector('#lgClear').onclick=()=>{ s.transit=null; bd.remove(); renderDay(); renderMap(); save(); };
+  bd.querySelector('#lgOk').onclick=()=>{
+    s.transit={mode:bd.querySelector('#lgMode').value,
+      info:bd.querySelector('#lgInfo').value.trim(),
+      min:bd.querySelector('#lgMin').value};
+    bd.remove(); renderDay(); renderMap(); save();
+  };
+}
+
+/* ================= 工具列事件 ================= */
+$('btnAdd').onclick=()=>openModal('add');
+$('btnPick').onclick=()=>setPickMode(!pickMode);
+$('btnFit').onclick=()=>{ const pts=day().stops.map(s=>[s.lat,s.lng]); if(pts.length) map.fitBounds(L.latLngBounds(pts),{padding:[55,55],maxZoom:15}); };
+$('btnSortTime').onclick=()=>{
+  const d=day();
+  d.stops.sort((a,b)=>(a.startTime||'99')<(b.startTime||'99')?-1:1);
+  renderAll();
+};
+$('btnClearDay').onclick=()=>{
+  if(!day().stops.length) return;
+  if(!confirm('確定清空「第'+(currentDay+1)+'天」的全部行程？')) return;
+  day().stops=[];
+  selectedStopId=null;
+  renderAll();
+};
+$('dayName').addEventListener('input',()=>{ day().name=$('dayName').value.trim(); renderTabs(); save(); });
+$('dayDate').addEventListener('change',()=>{ day().date=$('dayDate').value; renderTabs(); save(); });
+$('dayNotes').addEventListener('input',()=>{ day().notes=$('dayNotes').value; save(); });
+
+/* 地圖點選新增 */
+function setPickMode(on){
+  pickMode=on;
+  $('btnPick').classList.toggle('primary',on);
+  $('btnPick').textContent=on?'✖ 取消點選':'📍 地圖點選';
+  $('mapTip').classList.toggle('show',on);
+}
+map.on('click',async e=>{
+  if(!pickMode) return;
+  setPickMode(false);
+  const {lat,lng}=e.latlng;
+  toast('定位中…');
+  let addr='', name='';
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=zh-TW&lat='+lat+'&lon='+lng);
+    const j=await r.json();
+    if(j && j.display_name){ addr=j.display_name.split(',').slice(0,3).join(','); name=(j.name)||j.display_name.split(',')[0]; }
+  }catch(err){}
+  openModal('add');
+  setPicked({lat,lng,addr,name});
+});
+
+/* 清單事件（刪除／上下移／拖曳） */
+$('stopList').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-act]'); if(!btn) return;
+  const li=e.target.closest('li'); const id=li.dataset.id;
+  const d=day(); const idx=d.stops.findIndex(s=>s.id===id); if(idx<0) return;
+  const act=btn.dataset.act;
+  if(act==='edit'){ openModal('edit',id); return; }
+  if(act==='del'){
+    if(!confirm('刪除「'+d.stops[idx].name+'」？')) return;
+    d.stops.splice(idx,1); if(selectedStopId===id) selectedStopId=null;
+    renderAll();
+    return;
+  }
+  if(act==='up'&&idx>0){ [d.stops[idx-1],d.stops[idx]]=[d.stops[idx],d.stops[idx-1]]; }
+  if(act==='down'&&idx<d.stops.length-1){ [d.stops[idx+1],d.stops[idx]]=[d.stops[idx],d.stops[idx+1]]; }
+  if(act==='up'||act==='down'){
+    renderAll();
+  }
+});
+
+/* 拖曳排序 */
+let dragId=null;
+$('stopList').addEventListener('dragstart',e=>{
+  const li=e.target.closest('li'); if(!li) return;
+  dragId=li.dataset.id;
+  e.dataTransfer.effectAllowed='move';
+  try{ e.dataTransfer.setData('text/plain',dragId); }catch(err){}
+  li.classList.add('drag-ghost');
+});
+$('stopList').addEventListener('dragend',()=>{
+  dragId=null;
+  document.querySelectorAll('#stopList li').forEach(li=>{li.classList.remove('drag-ghost','drop-above','drop-below'); li.draggable=false;});
+});
+$('stopList').addEventListener('dragover',e=>{
+  e.preventDefault();
+  const li=e.target.closest('li');
+  document.querySelectorAll('#stopList li').forEach(x=>x.classList.remove('drop-above','drop-below'));
+  if(!li) return;
+  const r=li.getBoundingClientRect();
+  const before=e.clientY < r.top + r.height/2;
+  li.classList.add(before?'drop-above':'drop-below');
+});
+$('stopList').addEventListener('drop',e=>{
+  e.preventDefault();
+  const li=e.target.closest('li');
+  if(!dragId) return;
+  const d=day();
+  const from=d.stops.findIndex(s=>s.id===dragId); if(from<0) return;
+  let to;
+  if(!li){ to=d.stops.length; }
+  else{
+    const before=e.clientY < li.getBoundingClientRect().top + li.getBoundingClientRect().height/2;
+    to=d.stops.findIndex(s=>s.id===li.dataset.id)+(before?0:1);
+  }
+  if(from<to) to--;
+  const [moved]=d.stops.splice(from,1);
+  d.stops.splice(to,0,moved);
+  renderAll();
+});
+
+/* ================= 側欄寬度拖曳 ================= */
+const SPLIT_KEY='fukuoka-trip-sidebar-w';
+const sidebar=$('sidebar'), splitter=$('splitter'), mapWrap=$('mapWrap');
+const savedW=localStorage.getItem(SPLIT_KEY);
+if(savedW) sidebar.style.setProperty('--sidebar-w', savedW+'px');
+let splitDrag=null;
+splitter.addEventListener('pointerdown',e=>{
+  splitDrag={startX:e.clientX,startW:sidebar.getBoundingClientRect().width};
+  splitter.classList.add('dragging');
+  splitter.setPointerCapture(e.pointerId);
+  document.body.style.userSelect='none';
+});
+splitter.addEventListener('pointermove',e=>{
+  if(!splitDrag) return;
+  let w=splitDrag.startW+(e.clientX-splitDrag.startX);
+  const maxW=window.innerWidth*0.7;
+  w=Math.max(320,Math.min(maxW,w));
+  sidebar.style.setProperty('--sidebar-w',w+'px');
+  localStorage.setItem(SPLIT_KEY,String(Math.round(w)));
+});
+splitter.addEventListener('pointerup',()=>{
+  if(!splitDrag) return;
+  splitDrag=null;
+  splitter.classList.remove('dragging');
+  document.body.style.userSelect='';
+  map.invalidateSize();
+});
+splitter.addEventListener('pointercancel',()=>{
+  splitDrag=null;
+  splitter.classList.remove('dragging');
+  document.body.style.userSelect='';
+  map.invalidateSize();
+});
+
+/* ================= 啟動 ================= */
+renderAll();
+</script>
 </body>
 </html>
