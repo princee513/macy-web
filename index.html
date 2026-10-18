@@ -267,7 +267,10 @@
     #btnPickM.primary{background:var(--grad);color:#fff;border-color:transparent}
 
     .map-tip{bottom:calc(104px + env(safe-area-inset-bottom));font-size:13px;text-align:center;max-width:86vw}
-    #toast{bottom:calc(94px + env(safe-area-inset-bottom))}
+    /* toast 抬高後，隱藏偏移也要跟著加大才會完全移出畫面 */
+    #toast{bottom:calc(94px + env(safe-area-inset-bottom));
+           transform:translateX(-50%) translateY(200px)}
+    #toast.show{transform:translateX(-50%) translateY(0)}
 
     /* 彈窗改由底部滑出 */
     .backdrop{padding:0;align-items:flex-end}
