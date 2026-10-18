@@ -2,7 +2,8 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
 <title>福岡六天五夜・行程規劃器</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -36,6 +37,14 @@
   #tripTotal{font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--border);
              border-radius:999px;padding:5px 14px;white-space:nowrap}
   #tripTotal b{color:var(--accent);font-weight:700}
+  /* 管理模式（?admin 才顯示）：匯出/匯入/複製 */
+  #adminBar{display:inline-flex;gap:8px;align-items:center}
+  #adminBar .desktop-only .txt{display:inline}
+  @media (max-width:900px){
+    #adminBar .desktop-only{display:none}
+    #adminBar .btn{padding:7px 10px;min-height:36px}
+    #adminBar .btn .txt{display:none}
+  }
 
   /* ---------------- 天數列 ---------------- */
   #dayBar{display:flex;gap:8px;padding:10px 16px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);
@@ -207,14 +216,71 @@
          transition:transform .28s;max-width:88vw;box-shadow:var(--shadow-lg)}
   #toast.show{transform:translateX(-50%) translateY(0)}
 
+  /* ================= 手機／窄螢幕：行程・地圖 分頁切換 ================= */
+  #viewBar{display:none}
+  .map-fab{display:none}
   @media (max-width:900px){
-    #main{flex-direction:column}
-    #splitter{width:100%;height:7px;cursor:row-resize}
-    #splitter::after{top:2px;left:50%;width:36px;height:3px;transform:translateX(-50%)}
-    #sidebar{width:100%!important;max-width:100%;flex:1}
-    #mapWrap{flex:none;height:42vh}
-    header h1{font-size:14.5px}
+    #splitter{display:none}
     #tripTotal{display:none}
+    header{height:54px;padding:0 14px}
+    header h1{font-size:14.5px}
+    header .sub{display:none}
+
+    /* 行程表與地圖各自全螢幕，用底部分頁切換 */
+    #main{position:relative;overflow:hidden}
+    #sidebar{position:absolute;inset:0;width:100%!important;max-width:100%;flex:none;
+             overflow-y:auto;-webkit-overflow-scrolling:touch;
+             padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+    #mapWrap{position:absolute;inset:0;height:auto;flex:none}
+    body.view-plan #mapWrap{visibility:hidden}
+    body.view-map #sidebar{visibility:hidden}
+
+    #dayBar{padding:10px 12px;gap:8px;-webkit-overflow-scrolling:touch}
+    .tab{padding:9px 14px}
+    .day-head{padding:14px 16px 6px}
+    .day-name{font-size:20px}
+    .toolbar{padding:0 16px 4px}
+    .day-notes{width:calc(100% - 32px);margin:8px 16px 4px}
+    #stopList{padding:6px 16px 8px}
+    .btn{padding:9px 15px;min-height:40px}
+    .btn.mini{padding:7px 12px;min-height:34px}
+    .cand-head{padding-left:16px;padding-right:16px}
+    .cand-tip{padding-left:16px;padding-right:16px}
+    #candList{padding:0 16px 10px}
+    /* 16px 防 iOS 聚焦時自動放大 */
+    .field input,.field select,.field textarea,.day-notes,
+    .day-sub input[type=date]{font-size:16px}
+
+    .base-switch{top:10px;right:10px}
+    .base-switch button{padding:8px 14px;font-size:13px}
+
+    /* 底部分頁切換列 */
+    #viewBar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:900;justify-content:center;
+             padding:10px 14px calc(10px + env(safe-area-inset-bottom));pointer-events:none;
+             background:linear-gradient(to top,rgba(244,241,234,.97) 55%,rgba(244,241,234,0))}
+    #viewSwitch{display:flex;pointer-events:auto;background:#fff;border:1px solid var(--border);
+                border-radius:999px;padding:4px;box-shadow:var(--shadow-lg)}
+    #viewSwitch button{border:none;background:transparent;font-family:inherit;font-size:14.5px;font-weight:700;
+                color:var(--muted);padding:11px 30px;border-radius:999px;cursor:pointer;transition:all .15s}
+    #viewSwitch button.active{background:var(--grad);color:#fff;box-shadow:0 3px 10px rgba(226,112,74,.4)}
+
+    /* 地圖上的浮動按鈕 */
+    body.view-map .map-fab{display:flex;position:absolute;right:14px;z-index:600;width:48px;height:48px;
+        border-radius:50%;align-items:center;justify-content:center;font-size:20px;font-family:inherit;
+        background:#fff;border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;
+        transition:transform .15s}
+    body.view-map .map-fab:active{transform:scale(.92)}
+    #btnPickM{bottom:calc(96px + env(safe-area-inset-bottom))}
+    #btnFitM{bottom:calc(152px + env(safe-area-inset-bottom))}
+    #btnPickM.primary{background:var(--grad);color:#fff;border-color:transparent}
+
+    .map-tip{bottom:calc(104px + env(safe-area-inset-bottom));font-size:13px;text-align:center;max-width:86vw}
+    #toast{bottom:calc(94px + env(safe-area-inset-bottom))}
+
+    /* 彈窗改由底部滑出 */
+    .backdrop{padding:0;align-items:flex-end}
+    .modal{width:100vw;max-height:90vh;border-radius:20px 20px 0 0;
+           padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
   }
 </style>
 </head>
@@ -227,9 +293,12 @@
     <div class="sub">FUKUOKA TRIP PLANNER</div>
   </div>
   <span class="spacer"></span>
-  <button class="btn" id="btnExport" title="下載行程 JSON 檔，可到其他裝置匯入">匯出 JSON</button>
-  <button class="btn" id="btnImport" title="從 JSON 檔還原行程（會覆蓋目前內容）">匯入 JSON</button>
-  <input type="file" id="fileInput" accept=".json,application/json" hidden>
+  <span id="adminBar" hidden>
+    <button class="btn" id="btnCopy" title="複製行程 JSON：貼進 GitHub 網頁編輯器即可更新發布版">📋<span class="txt"> 複製 JSON</span></button>
+    <button class="btn desktop-only" id="btnExport" title="下載行程 JSON 檔">⬇<span class="txt"> 匯出</span></button>
+    <button class="btn desktop-only" id="btnImport" title="從 JSON 檔還原行程（會覆蓋目前內容）">⬆<span class="txt"> 匯入</span></button>
+    <input type="file" id="fileInput" accept=".json,application/json" hidden>
+  </span>
   <span id="tripTotal"></span>
 </header>
 
@@ -269,7 +338,7 @@
     <div id="candList"></div>
     <div class="side-foot">
       ⚠️ 範例景點的座標與營業時間僅供參考，請以地圖搜尋與官方公告為準。<br>
-      行程來源：<b>fukuoka-itinerary.json</b>（與網頁一起發布）。改好後按「匯出」覆蓋 repo 中的檔案再 push 即可更新網頁。
+      行程來源：<b>fukuoka-itinerary.json</b>（與網頁一起發布）。
     </div>
   </aside>
 
@@ -278,9 +347,18 @@
   <div id="mapWrap">
     <div id="map"></div>
     <div class="base-switch" id="baseSwitch"></div>
+    <button class="map-fab" id="btnFitM" title="顯示本日全部地點">🎯</button>
+    <button class="map-fab" id="btnPickM" title="在地圖上點選新增">📍</button>
     <div class="map-tip" id="mapTip">🗺 點選地圖上任一位置來新增行程</div>
   </div>
 </main>
+
+<nav id="viewBar">
+  <div id="viewSwitch">
+    <button id="vBtnPlan" class="active">📋 行程表</button>
+    <button id="vBtnMap">🗺 地圖</button>
+  </div>
+</nav>
 
 <div class="backdrop" id="backdrop" hidden>
   <div class="modal">
@@ -977,7 +1055,24 @@ function openLegModal(stopIdx){
   };
 }
 
-/* ================= 匯出／匯入 ================= */
+/* ================= 管理模式（?admin）：匯出／匯入／複製 ================= */
+if(new URLSearchParams(location.search).has('admin')){
+  $('adminBar').hidden=false;
+}
+$('btnCopy').onclick=async()=>{
+  const json=JSON.stringify(state,null,1);
+  try{
+    await navigator.clipboard.writeText(json);
+    toast('✅ 已複製行程 JSON —— 貼進 GitHub 上 fukuoka-itinerary.json 的編輯頁面儲存即可');
+  }catch(e){
+    /* 剪貼簿 API 不可用（非 HTTPS 或權限）→ 退回手動全選 */
+    const ta=document.createElement('textarea');
+    ta.value=json; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('✅ 已複製行程 JSON'); }
+    catch(e2){ toast('複製失敗，請改用「匯出」下載檔案'); }
+    ta.remove();
+  }
+};
 $('btnExport').onclick=()=>{
   const blob=new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
   const a=document.createElement('a');
@@ -1031,6 +1126,7 @@ function setPickMode(on){
   pickMode=on;
   $('btnPick').classList.toggle('primary',on);
   $('btnPick').textContent=on?'✖ 取消點選':'📍 地圖點選';
+  if($('btnPickM')) $('btnPickM').classList.toggle('primary',on);
   $('mapTip').classList.toggle('show',on);
   $('map').classList.toggle('pick-mode',on);
 }
@@ -1140,8 +1236,29 @@ function endSplit(){
 splitter.addEventListener('pointerup',endSplit);
 splitter.addEventListener('pointercancel',endSplit);
 
+/* ================= 手機／窄螢幕：行程・地圖分頁 ================= */
+const mqMobile=window.matchMedia('(max-width:900px)');
+function setView(v){
+  document.body.classList.toggle('view-plan',v==='plan');
+  document.body.classList.toggle('view-map',v==='map');
+  $('vBtnPlan').classList.toggle('active',v==='plan');
+  $('vBtnMap').classList.toggle('active',v==='map');
+  if(v==='map') setTimeout(()=>map.invalidateSize(),60);
+}
+$('vBtnPlan').onclick=()=>setView('plan');
+$('vBtnMap').onclick=()=>setView('map');
+/* 手機上的地圖浮動按鈕 */
+$('btnFitM').onclick=()=>{ const pts=day().stops.map(s=>[s.lat,s.lng]); if(pts.length) map.fitBounds(L.latLngBounds(pts),{padding:[55,55],maxZoom:15}); };
+$('btnPickM').onclick=()=>setPickMode(!pickMode);
+mqMobile.addEventListener('change',e=>{
+  if(e.matches) setView('plan');
+  else document.body.classList.remove('view-plan','view-map');
+  map.invalidateSize();
+});
+
 /* ================= 啟動 ================= */
 init();
+if(mqMobile.matches) setView('plan');
 </script>
 </body>
 </html>
