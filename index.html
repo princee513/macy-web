@@ -37,14 +37,6 @@
   #tripTotal{font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--border);
              border-radius:999px;padding:5px 14px;white-space:nowrap}
   #tripTotal b{color:var(--accent);font-weight:700}
-  /* 管理模式（?admin 才顯示）：匯出/匯入/複製 */
-  #adminBar{display:inline-flex;gap:8px;align-items:center}
-  #adminBar .desktop-only .txt{display:inline}
-  @media (max-width:900px){
-    #adminBar .desktop-only{display:none}
-    #adminBar .btn{padding:7px 10px;min-height:36px}
-    #adminBar .btn .txt{display:none}
-  }
 
   /* ---------------- 天數列 ---------------- */
   #dayBar{display:flex;gap:8px;padding:10px 16px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);
@@ -293,12 +285,6 @@
     <div class="sub">FUKUOKA TRIP PLANNER</div>
   </div>
   <span class="spacer"></span>
-  <span id="adminBar" hidden>
-    <button class="btn" id="btnCopy" title="複製行程 JSON：貼進 GitHub 網頁編輯器即可更新發布版">📋<span class="txt"> 複製 JSON</span></button>
-    <button class="btn desktop-only" id="btnExport" title="下載行程 JSON 檔">⬇<span class="txt"> 匯出</span></button>
-    <button class="btn desktop-only" id="btnImport" title="從 JSON 檔還原行程（會覆蓋目前內容）">⬆<span class="txt"> 匯入</span></button>
-    <input type="file" id="fileInput" accept=".json,application/json" hidden>
-  </span>
   <span id="tripTotal"></span>
 </header>
 
@@ -1054,52 +1040,6 @@ function openLegModal(stopIdx){
     bd.remove(); renderDay(); renderMap(); save();
   };
 }
-
-/* ================= 管理模式（?admin）：匯出／匯入／複製 ================= */
-if(new URLSearchParams(location.search).has('admin')){
-  $('adminBar').hidden=false;
-}
-$('btnCopy').onclick=async()=>{
-  const json=JSON.stringify(state,null,1);
-  try{
-    await navigator.clipboard.writeText(json);
-    toast('✅ 已複製行程 JSON —— 貼進 GitHub 上 fukuoka-itinerary.json 的編輯頁面儲存即可');
-  }catch(e){
-    /* 剪貼簿 API 不可用（非 HTTPS 或權限）→ 退回手動全選 */
-    const ta=document.createElement('textarea');
-    ta.value=json; document.body.appendChild(ta); ta.select();
-    try{ document.execCommand('copy'); toast('✅ 已複製行程 JSON'); }
-    catch(e2){ toast('複製失敗，請改用「匯出」下載檔案'); }
-    ta.remove();
-  }
-};
-$('btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='fukuoka-itinerary.json';
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  toast('已下載 fukuoka-itinerary.json —— 用它覆蓋 repo 裡的同名檔案再 push，網頁就會更新');
-};
-$('btnImport').onclick=()=>$('fileInput').click();
-$('fileInput').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    try{
-      const s=JSON.parse(rd.result);
-      if(!s||!Array.isArray(s.days)||!s.days.length) throw new Error('bad');
-      if(!confirm('匯入會覆蓋目前的行程，確定嗎？')) return;
-      state=s; currentDay=0; selectedStopId=null; fitPending=true;
-      normalize(state);
-      renderAll();
-      toast('✅ 匯入成功');
-    }catch(err){ toast('匯入失敗：不是有效的行程檔'); }
-  };
-  rd.readAsText(f);
-  e.target.value='';
-});
 
 /* ================= 工具列事件 ================= */
 $('btnAdd').onclick=()=>openModal('add');
